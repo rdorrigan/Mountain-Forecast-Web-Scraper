@@ -11,8 +11,10 @@ import pickle
 import os
 
 '''Eastside Sierras'''
-cathedral_range_url = 'https://www.mountain-forecast.com/subranges/cathedral-range/locations'
-
+sierras_cathedral_range_url = 'https://www.mountain-forecast.com/subranges/cathedral-range/locations'
+sierras_other_url = 'https://www.mountain-forecast.com/subranges/2662/locations'
+sierras_carson_url = 'https://www.mountain-forecast.com/subranges/carson-range/locations'
+cascade_range_url ='https://www.mountain-forecast.com/subranges/cascade-range-3/locations'
 def load_urls(urls_filename):
     """ Returns dictionary of mountain urls saved a pickle file """
     
@@ -69,7 +71,7 @@ def get_mountains_urls(urls_filename = 'mountains_urls.pickle', url = 'https://w
             if 'with' in mtn_range:
                 print('Retrieving urls for the {}'.format(mtn_range.split(' with')[0]))
             else:
-                print('Retrieving urls for the {}'.format(mtn_range))
+                print('Retrieving urls for the {}'.format(mtn_range.strip()))
         mountain_items = soup.find('ul', attrs={'class':'b-list-table'}).find_all('li')
         mountain_urls = {item.find('a').get_text() : get_urls_by_elevation(item.find('a')['href']) for item in mountain_items}
         print('dumping urls to {}'.format(urls_filename))
@@ -86,7 +88,7 @@ def clean(text):
     return re.sub('\s+', ' ', text).strip()  # Is there a way to use only REGEX?
 
 
-def save_data(rows):
+def save_data(rows,fname):
     """ Saves the collected forecasts into a CSV file
     
     If the file already exists then it updates the old forecasts
@@ -96,8 +98,11 @@ def save_data(rows):
     column_names = ['mountain', 'date', 'elevation', 'time', 'wind', 'summary', 'rain', 'snow', 'max_temperature', 'min_temperature', 'chill', 'freezing_level', 'sunrise', 'sunset']
 
     today = datetime.date.today()
-    dataset_name = os.path.join(os.getcwd(), '{:02d}{}_mountain_forecasts.csv'.format(today.month, today.year))  # i.e. 042019_mountain_forecasts.csv
-
+    # dataset_name = os.path.join(os.getcwd(), '{:02d}{}_mountain_forecasts.csv'.format(today.month, today.year))  # i.e. 042019_mountain_forecasts.csv
+    if fname is None:
+        dataset_name = os.path.join(os.getcwd(), '{:02d}{}_mountain_forecasts.csv'.format(today.month, today.year))
+    else:
+        dataset_name = os.path.join(os.getcwd(), '{:02d}{}{}_mountain_forecasts.csv'.format(today.month, today.year,fname))
     try:
         new_df = pd.DataFrame(rows, columns=column_names)
         old_df = pd.read_csv(dataset_name, dtype=object)
@@ -107,7 +112,8 @@ def save_data(rows):
 
         old_df.update(new_df)
         only_include = ~old_df.index.isin(new_df.index)
-        combined = pd.concat([old_df[only_include], new_df])
+        combined = pd.concat([old_df[only_include], new_df],sort=False)
+        combined.drop_duplicates(inplace=True)
         combined.to_csv(dataset_name)
 
     except FileNotFoundError:
@@ -194,11 +200,34 @@ def scrape_forecasts():
 
     print('All done! The process took {} seconds\n'.format(round(time.time() - start, 2)))
 
-def scrape_cathedrals():
-    """ Call the different functions necessary to scrape mountain weather forecasts and save the data specifically for the Eastside Sierras(Cathedrals)"""
+def scrape_list(url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'serra_carsons':sierras_carson_url,'cascades':cascade_range_url}):
+    """
+    An Extension of scrape_forecasts()
+    Call the different functions necessary to scrape mountain weather forecasts and save the data specifically for the Eastside Sierras(Cathedrals)
+    """
 
     start = time.time()
     print('\nGetting Mountain URLS')
+    # url_list = [sierras_other_url,sierras_cathedral_range_url,sierras_carson_url]
+    url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'serra_carsons':sierras_carson_url,'cascades':cascade_range_url}
+    for k,v in url_dict.items():
+    # for l in url_list:
+        # fname = l+'.pickle'
+        fname = k+'.pickle'
+        mountains_urls = get_mountains_urls(urls_filename = fname, url = v)
+        
+        print('URLs for {} Mountains collected\n'.format(len(mountains_urls)))
+
+        print('Scraping forecasts...\n')
+        forecasts = scrape(mountains_urls)
+
+        print('Saving forecasts...\n')
+        '''
+        Save data in separate files, as well?
+        '''    
+        save_data(forecasts)
+        save_data(forecasts,k)
+    '''
     # mountains_urls = get_mountains_urls(urls_filename = '10_mountains_urls.pickle', url = 'https://www.mountain-forecast.com/countries/United-States')
     mountains_urls = get_mountains_urls(urls_filename = 'cathedral_range_mountains_urls.pickle', url = cathedral_range_url)
     # mountains_urls = get_mountains_urls(urls_filename = '100_mountains_urls.pickle')
@@ -209,11 +238,19 @@ def scrape_cathedrals():
 
     print('Saving forecasts...\n')
     save_data(forecasts)
-
+    '''
+    mins = (time.time() - start)/60
+    secs = mins/60
     print('All done! The process took {} seconds\n'.format(round(time.time() - start, 2)))
 if __name__ == '__main__':
-    scrape_cathedrals()
-    
+    '''
+    Should probably expand this to a command line tool if it were to be something more
+    https://www.mountain-forecast.com/mountain_ranges
+    ^^^ is the list of all Mountain Ranges with Forecasts
+    Could present as a list or allow a specific peak or range to be searched and retrieved
+    '''
+    scrape_list()
+    exit()
     scrape_forecasts()
     
     
