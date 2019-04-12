@@ -10,6 +10,8 @@ import time
 import pickle
 import os
 
+'''Eastside Sierras'''
+cathedral_range_url = 'https://www.mountain-forecast.com/subranges/cathedral-range/locations'
 
 def load_urls(urls_filename):
     """ Returns dictionary of mountain urls saved a pickle file """
@@ -39,6 +41,7 @@ def get_urls_by_elevation(url):
     time.sleep(1) # Delay to not bombard the website with requests
     page = requests.get(full_url)
     soup = bs(page.content, 'html.parser')
+    
 
     elevation_items = soup.find('ul', attrs={'class':'b-elevation__container'}).find_all('a', attrs={'class':'js-elevation-link'})
     
@@ -52,6 +55,7 @@ def get_mountains_urls(urls_filename = 'mountains_urls.pickle', url = 'https://w
     """
 
     try:
+        print('trying to load urls from {}'.format(urls_filename))
         mountain_urls = load_urls(urls_filename)
 
     except:  # Is this better than checking if the file exists? Should I catch specific errors?
@@ -60,11 +64,17 @@ def get_mountains_urls(urls_filename = 'mountains_urls.pickle', url = 'https://w
 
         page = requests.get(directory_url)
         soup = bs(page.content, 'html.parser')
-
+        mtn_range = soup.find('h1').get_text()
+        if mtn_range is not None:
+            if 'with' in mtn_range:
+                print('Retrieving urls for the {}'.format(mtn_range.split(' with')[0]))
+            else:
+                print('Retrieving urls for the {}'.format(mtn_range))
         mountain_items = soup.find('ul', attrs={'class':'b-list-table'}).find_all('li')
         mountain_urls = {item.find('a').get_text() : get_urls_by_elevation(item.find('a')['href']) for item in mountain_items}
-    
+        print('dumping urls to {}'.format(urls_filename))
         dump_urls(mountain_urls, urls_filename)
+
 
     finally:
         return mountain_urls
@@ -171,7 +181,8 @@ def scrape_forecasts():
 
     start = time.time()
     print('\nGetting Mountain URLS')
-    #mountains_urls = get_mountains_urls(urls_filename = '10_mountains_urls.pickle', url = 'https://www.mountain-forecast.com/countries/United-States')
+    # mountains_urls = get_mountains_urls(urls_filename = '10_mountains_urls.pickle', url = 'https://www.mountain-forecast.com/countries/United-States')
+    
     mountains_urls = get_mountains_urls(urls_filename = '100_mountains_urls.pickle')
     print('URLs for {} Mountains collected\n'.format(len(mountains_urls)))
 
@@ -183,8 +194,26 @@ def scrape_forecasts():
 
     print('All done! The process took {} seconds\n'.format(round(time.time() - start, 2)))
 
+def scrape_cathedrals():
+    """ Call the different functions necessary to scrape mountain weather forecasts and save the data specifically for the Eastside Sierras(Cathedrals)"""
 
+    start = time.time()
+    print('\nGetting Mountain URLS')
+    # mountains_urls = get_mountains_urls(urls_filename = '10_mountains_urls.pickle', url = 'https://www.mountain-forecast.com/countries/United-States')
+    mountains_urls = get_mountains_urls(urls_filename = 'cathedral_range_mountains_urls.pickle', url = cathedral_range_url)
+    # mountains_urls = get_mountains_urls(urls_filename = '100_mountains_urls.pickle')
+    print('URLs for {} Mountains collected\n'.format(len(mountains_urls)))
+
+    print('Scraping forecasts...\n')
+    forecasts = scrape(mountains_urls)
+
+    print('Saving forecasts...\n')
+    save_data(forecasts)
+
+    print('All done! The process took {} seconds\n'.format(round(time.time() - start, 2)))
 if __name__ == '__main__':
-
+    scrape_cathedrals()
+    
     scrape_forecasts()
+    
     
