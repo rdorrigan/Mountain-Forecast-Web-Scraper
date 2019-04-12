@@ -105,13 +105,13 @@ def save_data(rows,fname=None):
         dataset_name = os.path.join(os.getcwd(), '{:02d}{}{}_mountain_forecasts.csv'.format(today.month, today.year,fname))
     try:
         new_df = pd.DataFrame(rows, columns=column_names)
-        new_df['wind speed'] = int(new_df['wind'].split(' ')[0])
-        new_df['wind direction'] = new_df['wind'].split(' ')[1]
+        new_df['wind speed'] = new_df['wind'].apply(lambda x: int(x.split(' ')[0]))
+        new_df['wind direction'] = new_df['wind'].apply(lambda x: x.split(' ')[1])
         old_df = pd.read_csv(dataset_name, dtype=object)
         old_cols = old_df.columns.values
         if 'wind speed' not in old_cols:
-            old_df['wind speed'] = int(old_df['wind'].split(' ')[0])
-            old_df['wind direction'] = old_df['wind'].split(' ')[1]
+            old_df['wind speed'] = old_df['wind'].apply(lambda x: int(x.split(' ')[0]))
+            old_df['wind direction'] = old_df['wind'].apply(lambda x: x.split(' ')[1])
         new_df.set_index(column_names[:4], inplace=True)
         old_df.set_index(column_names[:4], inplace=True)
 
