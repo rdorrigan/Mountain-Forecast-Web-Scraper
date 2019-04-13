@@ -207,7 +207,7 @@ def scrape_forecasts():
 
     print('All done! The process took {} seconds\n'.format(round(time.time() - start, 2)))
 
-def scrape_list(url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'serra_carsons':sierras_carson_url,'cascades':cascade_range_url}):
+def scrape_list(url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'sierra_carsons':sierras_carson_url,'cascades':cascade_range_url}):
     """
     An Extension of scrape_forecasts()
     Call the different functions necessary to scrape mountain weather forecasts and save the data specifically for the Eastside Sierras(Cathedrals)
@@ -216,7 +216,7 @@ def scrape_list(url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals
     start = time.time()
     print('\nGetting Mountain URLS')
     # url_list = [sierras_other_url,sierras_cathedral_range_url,sierras_carson_url]
-    url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'serra_carsons':sierras_carson_url,'cascades':cascade_range_url}
+    url_dict = {'sierra_others':sierras_other_url,'sierra_cathedrals':sierras_cathedral_range_url,'sierra_carsons':sierras_carson_url,'cascades':cascade_range_url}
     for k,v in url_dict.items():
     # for l in url_list:
         # fname = l+'.pickle'
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     Could present as a list or allow a specific peak or range to be searched and retrieved
     '''
     scrape_list()
-    exit()
+    
     scrape_forecasts()
     
     
