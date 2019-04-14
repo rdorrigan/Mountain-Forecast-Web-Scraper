@@ -103,6 +103,7 @@ def save_data(rows,fname=None):
         dataset_name = os.path.join(os.getcwd(), '{:02d}{}_mountain_forecasts.csv'.format(today.month, today.year))
     else:
         dataset_name = os.path.join(os.getcwd(), '{:02d}{}{}_mountain_forecasts.csv'.format(today.month, today.year,fname))
+
     try:
         new_df = pd.DataFrame(rows, columns=column_names)
         new_df['wind speed'] = new_df['wind'].apply(lambda x: int(x.split(' ')[0]))
@@ -120,10 +121,16 @@ def save_data(rows,fname=None):
         combined = pd.concat([old_df[only_include], new_df],sort=False)
 
         combined.drop_duplicates(inplace=True)
-        combined.replace({'-',np.NaN},inplace=True)
+        combined[6:8].replace({'-',np.NaN},inplace=True)
+        combined[12:14].replace({'-',np.NaN},inplace=True)
+        print('saving to {}'.format(dataset_name))
         combined.to_csv(dataset_name)
 
     except FileNotFoundError:
+        new_df.replace({'-',np.NaN},inplace=True)
+        new_df[6:8].replace({'-',np.NaN},inplace=True)
+        new_df[12:14].replace({'-',np.NaN},inplace=True)
+        print('saving to {}'.format(dataset_name))
         new_df.to_csv(dataset_name, index=False)
 
 
